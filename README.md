@@ -29,19 +29,6 @@ The extension spoofs your user-agent to make Discord think you're using the desk
 4. Click "Load unpacked" and select the extension folder
 5. You're done!
 
-## Mobile Installation (Android)
-
-1. Download the extension: [Download Extension](https://cdn.discordapp.com/attachments/1443063437050777621/1451536811766583350/Discord-Web-Quest-Completer-main.zip?ex=69468880&is=69453700&hm=86b07163869cb25fe9175278e528c6436573b182616df54fa8f2a296d340d1d1&)
-2. Download Kiwi Browser: [Download Kiwi](https://github.com/kiwibrowser/src.next/releases)
-3. Open Kiwi Browser and go to `kiwi://extensions`
-   - Or tap the three dots → select "Extensions"
-4. Enable Developer mode, then tap `+ (from .zip/crx/.user.js)` and upload the downloaded extension
-5. After that, open Discord Quests page: [Quest](https://discord.com/quest-home), accept at least one quest and choose **Playing on Desktop**, then **REFRESH**
-   - A "Running Quests" button will appear. Click it and check console for progress updates
-   - If it doesn't work, refresh the quest page again
-
-This version supports multi-quest execution on mobile with the same concurrent processing as desktop.
-
 ## How to use
 
 1. Go to `https://discord.com/quest-home` in your browser
