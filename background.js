@@ -1,5 +1,5 @@
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('Discord Quest Helper extension installed');
+  console.info('Discord Auto Quest extension installed');
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -18,6 +18,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else {
       sendResponse({ success: false, error: 'No tab ID found' });
     }
-    return true;
   }
+  return true;
 });

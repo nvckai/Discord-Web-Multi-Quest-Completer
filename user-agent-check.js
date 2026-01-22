@@ -18,8 +18,8 @@
         configurable: true
       });
       
-      console.log('[Discord Quest Helper] User-Agent override active:', electronUserAgent);
+      console.info('[Discord Auto Quest] User-Agent override active:', electronUserAgent);
     } catch (error) {
-      console.error('[Discord Quest Helper] Failed to override user agent:', error);
+      console.error('[Discord Auto Quest] Failed to override user agent:', error);
     }
   })();

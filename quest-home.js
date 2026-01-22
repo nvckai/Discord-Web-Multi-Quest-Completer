@@ -67,10 +67,10 @@
       return;
     }
     
-    if (document.getElementById('discord-quest-helper-btn')) return;
+    if (document.getElementById('DiscordQuestButton')) {return;}
 
     const button = document.createElement('div');
-    button.id = 'discord-quest-helper-btn';
+    button.id = 'DiscordQuestButton';
     button.style.cssText = STYLES.button;
 
     const icon = document.createElement('img');
@@ -85,8 +85,11 @@
     button.appendChild(textLabel);
 
     const expandButton = document.createElement('button');
-    expandButton.innerHTML = '▼';
-    expandButton.style.cssText = STYLES.expandButton;
+    const arrowIcon = document.createElement('img');
+    arrowIcon.src = 'https://pic.onlinewebfonts.com/thumbnails/icons_378683.svg';
+    arrowIcon.style.cssText = 'width: 10px; height: 10px; display: block; pointer-events: none;';
+    expandButton.appendChild(arrowIcon);
+    expandButton.style.cssText = STYLES.expandButton + ' padding: 4px; display: flex; align-items: center; justify-content: center;';
     expandButton.addEventListener('click', (e) => {
       e.stopPropagation();
       togglePanel();
@@ -114,24 +117,29 @@
   }
 
   function handleButtonClick(button, textLabel, icon, expandButton) {
+    const elements = { button, textLabel, icon, expandButton };
+
     if (typeof chrome === 'undefined' || !chrome.runtime) {
-      updateButtonState(button, textLabel, icon, expandButton, 'Extension Error', '#ff4444', 'white', true);
+      updateButtonState(elements, { message: 'Extension Error', bgColor: '#ff4444', textColor: 'white', invertIcons: true });
       return;
     }
 
     chrome.runtime.sendMessage({ action: 'executeQuestCode' }, (response) => {
       if (chrome.runtime.lastError) {
-        console.error('Discord Quest Helper Error:', chrome.runtime.lastError);
-        updateButtonState(button, textLabel, icon, expandButton, 'Error', 'black', 'white', true);
+        console.error('Discord Auto Quest Error:', chrome.runtime.lastError);
+        updateButtonState(elements, { message: 'Error', bgColor: 'black', textColor: 'white', invertIcons: true });
       } else if (response && response.success) {
-        updateButtonState(button, textLabel, icon, expandButton, 'Code Executed', 'black', 'white', true);
+        updateButtonState(elements, { message: 'Code Executed', bgColor: 'black', textColor: 'white', invertIcons: true });
       } else {
-        updateButtonState(button, textLabel, icon, expandButton, 'Error', 'black', 'white', true);
+        updateButtonState(elements, { message: 'Error', bgColor: 'black', textColor: 'white', invertIcons: true });
       }
     });
   }
 
-  function updateButtonState(button, textLabel, icon, expandButton, message, bgColor, textColor, invertIcons) {
+  function updateButtonState(elements, state) {
+    const { button, textLabel, icon, expandButton } = elements;
+    const { message, bgColor, textColor, invertIcons } = state;
+
     textLabel.textContent = message;
     button.style.background = bgColor;
     button.style.color = textColor;
@@ -151,10 +159,10 @@
   }
 
   function createExpandedPanel() {
-    if (document.getElementById('quest-panel')) return;
+    if (document.getElementById('DiscordQuestPanel')) {return;}
 
     const panel = document.createElement('div');
-    panel.id = 'quest-panel';
+    panel.id = 'DiscordQuestPanel';
     panel.style.cssText = STYLES.panel;
 
     const title = document.createElement('h3');
@@ -171,11 +179,11 @@
   }
 
   function removeElements() {
-    const existingButton = document.getElementById('discord-quest-helper-btn');
-    if (existingButton) existingButton.remove();
+    const existingButton = document.getElementById('DiscordQuestButton');
+    if (existingButton) {existingButton.remove();}
     
-    const existingPanel = document.getElementById('quest-panel');
-    if (existingPanel) existingPanel.remove();
+    const existingPanel = document.getElementById('DiscordQuestPanel');
+    if (existingPanel) {existingPanel.remove();}
   }
 
   function togglePanel() {
@@ -187,8 +195,8 @@
     if (isPanelExpanded) {
       createExpandedPanel();
     } else {
-      const panel = document.getElementById('quest-panel');
-      if (panel) panel.remove();
+      const panel = document.getElementById('DiscordQuestPanel');
+      if (panel) {panel.remove();}
     }
   }
 
