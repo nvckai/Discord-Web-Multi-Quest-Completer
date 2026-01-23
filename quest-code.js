@@ -61,7 +61,11 @@
   async function runQuestCode(webpackRequire) {
     try {
       console.info('Discord Auto Quest: Initializing...');
-      checkUserAgent();
+
+      const isDesktopApp = typeof window.DiscordNative !== "undefined";
+      if (!isDesktopApp) {
+        console.info('Discord Auto Quest: Spoofing Desktop Client via Heartbeat Simulation.');
+      }
 
       const stores = loadStores(webpackRequire);
       if (!stores) {return;}
@@ -136,15 +140,6 @@
     }
   }
 
-  function checkUserAgent() {
-    const userAgent = navigator.userAgent;
-    if (userAgent.includes("Electron/")) {
-      console.info('Discord Auto Quest: User-Agent override is active (Electron detected).');
-    } else {
-      console.warn('Discord Auto Quest: User-Agent does not contain "Electron/". some functionality will rely on spoofing.');
-    }
-  }
-
   function getActiveQuests(QuestsStore) {
     const supportedTasks = ["WATCH_VIDEO", "PLAY_ON_DESKTOP", "STREAM_ON_DESKTOP", "PLAY_ACTIVITY", "WATCH_VIDEO_ON_MOBILE"];
 
@@ -184,33 +179,27 @@
 
   function loadStores(webpackRequire) {
     try {
-      const definitions = [
-        { name: 'ApplicationStreamingStore', filter: m => m.__proto__?.getStreamerActiveStreamMetadata },
-        { name: 'RunningGameStore', filter: m => m.getRunningGames },
-        { name: 'QuestsStore', filter: m => m.__proto__?.getQuest },
-        { name: 'ChannelStore', filter: m => m.__proto__?.getAllThreadsForParent },
-        { name: 'GuildChannelStore', filter: m => m.getSFWDefaultChannel },
-        { name: 'FluxDispatcher', filter: m => m.__proto__?.flushWaitQueue },
-        { name: 'api', filter: m => m.tn?.get, transform: m => m?.tn }
-      ];
+      const ApplicationStreamingStore = findModule(webpackRequire, m => m.__proto__?.getStreamerActiveStreamMetadata);
+      const RunningGameStore = findModule(webpackRequire, m => m.getRunningGames);
+      const QuestsStore = findModule(webpackRequire, m => m.__proto__?.getQuest);
+      const ChannelStore = findModule(webpackRequire, m => m.__proto__?.getAllThreadsForParent);
+      const GuildChannelStore = findModule(webpackRequire, m => m.getSFWDefaultChannel);
+      const FluxDispatcher = findModule(webpackRequire, m => m.__proto__?.flushWaitQueue);
+      const api = findModule(webpackRequire, m => m.tn?.get)?.tn;
 
-      const stores = {};
-      const missing = [];
-
-      for (const { name, filter, transform } of definitions) {
-        const module = findModule(webpackRequire, filter);
-        stores[name] = transform ? transform(module) : module;
-        
-        if (!stores[name]) {
-             missing.push(name);
-        }
-      }
-
-      if (missing.length > 0) {
+      if (!ApplicationStreamingStore || !RunningGameStore || !QuestsStore || !ChannelStore || !GuildChannelStore || !FluxDispatcher || !api) {
+        const missing = [];
+        if (!ApplicationStreamingStore) {missing.push('ApplicationStreamingStore');}
+        if (!RunningGameStore) {missing.push('RunningGameStore');}
+        if (!QuestsStore) {missing.push('QuestsStore');}
+        if (!ChannelStore) {missing.push('ChannelStore');}
+        if (!GuildChannelStore) {missing.push('GuildChannelStore');}
+        if (!FluxDispatcher) {missing.push('FluxDispatcher');}
+        if (!api) {missing.push('api');}
         throw new Error(`Could not find stores: ${missing.join(', ')}`);
       }
 
-      return stores;
+      return { ApplicationStreamingStore, RunningGameStore, QuestsStore, ChannelStore, GuildChannelStore, FluxDispatcher, api };
     } catch (error) {
       console.error('Discord Auto Quest: Error loading stores:', error);
       return null;
