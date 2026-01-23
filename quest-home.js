@@ -3,6 +3,7 @@
 
   let isPanelExpanded = false;
   let expandButtonReference;
+  const questStateCache = new Map();
 
   const STYLES = {
     button: `
@@ -55,9 +56,34 @@
       color: white;
       border-radius: 10px;
       padding: 16px;
-      width: 180px;
+      width: 250px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.5);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    `,
+    questList: `
+      margin-bottom: 5px;
+      max-height: 200px;
+      overflow-y: auto;
+    `,
+    questItem: `
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 13px;
+    `,
+    questName: `
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-right: 8px;
+      color: #eee;
+    `,
+    questProgress: `
+      font-family: monospace;
+      color: #aaa;
+      font-size: 12px;
     `
   };
 
@@ -165,9 +191,19 @@
     panel.id = 'DiscordQuestPanel';
     panel.style.cssText = STYLES.panel;
 
+    const questListContainer = document.createElement('div');
+    questListContainer.id = 'DiscordQuestList';
+    questListContainer.style.cssText = STYLES.questList;
+    
+    if (questStateCache.size > 0) {
+      questStateCache.forEach(quest => updateQuestItemUI(questListContainer, quest));
+    }
+    
+    panel.appendChild(questListContainer);
+
     const title = document.createElement('h3');
     title.textContent = 'Discord ID | Auto Quest';
-    title.style.cssText = 'margin: 0 0 12px 0; font-size: 16px; font-weight: bold;';
+    title.style.cssText = 'margin: 0 0 12px 0; font-size: 16px; font-weight: bold; border-top: 1px solid #333; padding-top: 12px;';
     panel.appendChild(title);
 
     const credit = document.createElement('p');
@@ -176,6 +212,46 @@
     panel.appendChild(credit);
 
     document.body.appendChild(panel);
+  }
+
+  window.addEventListener('message', ({ source, data }) => {
+    if (source !== window || !data || data.prefix !== 'DISCORD_QUEST_COMPLETER') { return; }
+
+    const listContainer = document.getElementById('DiscordQuestList');
+
+    if (data.type === 'QUEST_LIST') {
+      questStateCache.clear();
+      data.data.forEach(q => questStateCache.set(q.id, q));
+      if (listContainer) {
+        listContainer.innerHTML = ''; 
+        data.data.forEach(q => updateQuestItemUI(listContainer, q));
+      }
+    } else if (data.type === 'QUEST_UPDATE') {
+      questStateCache.set(data.data.id, data.data);
+      if (listContainer) { updateQuestItemUI(listContainer, data.data); }
+    }
+  });
+
+  function updateQuestItemUI(container, quest) {
+    let item = document.getElementById(`quest-item-${quest.id}`);
+    
+    if (!item) {
+      item = document.createElement('div');
+      item.id = `quest-item-${quest.id}`;
+      item.style.cssText = STYLES.questItem;
+      item.innerHTML = `
+        <span style="${STYLES.questName}" title="${quest.name}">${quest.name}</span>
+        <span id="quest-progress-${quest.id}" style="${STYLES.questProgress}"></span>
+      `;
+      container.appendChild(item);
+    }
+
+    const progressSpan = item.querySelector(`#quest-progress-${quest.id}`);
+    if (progressSpan) {
+      progressSpan.textContent = quest.completed ? 'DONE' : `${quest.progress}/${quest.target}`;
+      progressSpan.style.color = quest.completed ? '#43b581' : '#aaa';
+      item.style.opacity = quest.completed ? '0.5' : '1';
+    }
   }
 
   function removeElements() {

@@ -58,6 +58,14 @@
     return null;
   }
 
+  function sendUpdate(type, data) {
+    window.postMessage({
+      prefix: 'DISCORD_QUEST_COMPLETER',
+      type: type,
+      data: data
+    }, '*');
+  }
+
   async function runQuestCode(webpackRequire) {
     try {
       console.info('Discord Auto Quest: Initializing...');
@@ -80,6 +88,15 @@
       console.info(`Discord Auto Quest: Found ${activeQuests.length} active quest(s).`);
 
       const questStates = activeQuests.map(quest => initializeQuestState(quest));
+
+      sendUpdate('QUEST_LIST', questStates.map(state => ({
+        id: state.quest.id,
+        name: state.questName,
+        progress: Math.floor(state.currentProgress),
+        target: state.secondsNeeded,
+        completed: state.completed
+      })));
+
       
       const videoStates = questStates.filter(s => s.taskType.startsWith("WATCH_VIDEO"));
       const heartbeatStates = questStates.filter(s => !s.taskType.startsWith("WATCH_VIDEO"));
@@ -206,6 +223,10 @@
     }
   }
 
+  const notifyUI = (quest, progress, target, completed) => {
+     sendUpdate('QUEST_UPDATE', { id: quest.id, name: quest.config.messages.questName, progress, target, completed });
+  };
+
   async function processVideoStep(state, api) {
     const { quest, secondsNeeded, enrolledAt, currentProgress, questName } = state;
     const maxFuture = 10;
@@ -226,10 +247,13 @@
         
         state.currentProgress = nextTime;
         console.info(`Discord Auto Quest: "${questName}" (Video) progress: ${Math.floor(state.currentProgress)}/${secondsNeeded}s`);
+        notifyUI(quest, Math.floor(state.currentProgress), secondsNeeded, false);
 
         if (res.body.completed_at !== null || state.currentProgress >= secondsNeeded) {
             state.completed = true;
             console.info(`Discord Auto Quest: Quest "${questName}" completed!`);
+            notifyUI(quest, secondsNeeded, secondsNeeded, true);
+            
             try { 
               await api.post({ url: `/quests/${quest.id}/video-progress`, body: { timestamp: secondsNeeded } }); 
             } catch (error) {
@@ -268,6 +292,7 @@
       state.currentProgress = serverProgress;
       
       console.info(`Discord Auto Quest: "${questName}" progress: ${Math.floor(state.currentProgress)}/${secondsNeeded}s`);
+      notifyUI(quest, Math.floor(state.currentProgress), secondsNeeded, state.currentProgress >= secondsNeeded);
 
       if (state.currentProgress >= secondsNeeded) {
         await api.post({
@@ -276,6 +301,7 @@
         });
         state.completed = true;
         console.info(`Discord Auto Quest: Quest "${questName}" completed!`);
+        notifyUI(quest, secondsNeeded, secondsNeeded, true);
       }
     } catch (error) {
       console.error(`Discord Auto Quest: Error sending heartbeat for "${questName}":`, error);
