@@ -50,8 +50,8 @@
     const modules = Object.values(webpackRequire.c);
     for (const module of modules) {
       if (module && module.exports) {
-        if (module.exports.Z && filter(module.exports.Z)) {return module.exports.Z;}
-        if (module.exports.ZP && filter(module.exports.ZP)) {return module.exports.ZP;}
+        if (module.exports.A && filter(module.exports.A)) {return module.exports.A;}
+        if (module.exports.Ay && filter(module.exports.Ay)) {return module.exports.Ay;}
         if (filter(module.exports)) {return module.exports;}
       }
     }
@@ -97,7 +97,6 @@
         completed: state.completed
       })));
 
-      
       const videoStates = questStates.filter(s => s.taskType.startsWith("WATCH_VIDEO"));
       const heartbeatStates = questStates.filter(s => !s.taskType.startsWith("WATCH_VIDEO"));
 
@@ -149,7 +148,6 @@
       })();
 
       await Promise.all([videoPromise, heartbeatPromise]);
-
       console.info("Discord Auto Quest: All quests processing finished!");
 
     } catch (error) {
@@ -201,8 +199,8 @@
       const QuestsStore = findModule(webpackRequire, m => m.__proto__?.getQuest);
       const ChannelStore = findModule(webpackRequire, m => m.__proto__?.getAllThreadsForParent);
       const GuildChannelStore = findModule(webpackRequire, m => m.getSFWDefaultChannel);
-      const FluxDispatcher = findModule(webpackRequire, m => m.__proto__?.flushWaitQueue);
-      const api = findModule(webpackRequire, m => m.tn?.get)?.tn;
+      const FluxDispatcher = findModule(webpackRequire, m => m.h?.__proto__?.flushWaitQueue)?.h;
+      const api = findModule(webpackRequire, m => m.Bo?.get)?.Bo;
 
       if (!ApplicationStreamingStore || !RunningGameStore || !QuestsStore || !ChannelStore || !GuildChannelStore || !FluxDispatcher || !api) {
         const missing = [];
