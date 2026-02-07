@@ -3,12 +3,23 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'executeQuestCode') {
+  if (request.action === 'getVersion') {
+    const manifest = chrome.runtime.getManifest();
+    sendResponse({ version: manifest.version });
+  } else if (request.action === 'executeQuestCode') {
     if (sender.tab && sender.tab.id) {
+      const manifest = chrome.runtime.getManifest();
       chrome.scripting.executeScript({
         target: { tabId: sender.tab.id },
-        files: ['quest-code.js'],
+        func: (version) => { window.__QUEST_VERSION = version; },
+        args: [manifest.version],
         world: 'MAIN'
+      }).then(() => {
+        return chrome.scripting.executeScript({
+          target: { tabId: sender.tab.id },
+          files: ['quest-code.js'],
+          world: 'MAIN'
+        });
       }).then(() => {
         sendResponse({ success: true });
       }).catch((error) => {

@@ -68,12 +68,15 @@
 
   async function runQuestCode(webpackRequire) {
     try {
-      console.info('Discord Auto Quest: Initializing...');
+      const version = window.__QUEST_VERSION || 'unknown';
+      console.info(`Discord Auto Quest: Initializing... (v${version})`);
 
       const isDesktopApp = typeof window.DiscordNative !== "undefined";
       if (!isDesktopApp) {
         console.info('Discord Auto Quest: Spoofing Desktop Client via Heartbeat Simulation.');
       }
+      
+      console.info(`Discord Auto Quest: Initialized! Running v${version}`);
 
       const stores = loadStores(webpackRequire);
       if (!stores) {return;}
